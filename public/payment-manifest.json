@@ -1,0 +1,4 @@
+{
+  "default_applications": ["/app-manifest.json"],
+  "supported_origins": []
+}
