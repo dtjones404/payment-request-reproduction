@@ -1,7 +1,7 @@
 import Express from "express";
 
 async function sleep(ms) {
-  await new Promise((resolve, reject) => setTimeout(resolve, ms));
+  await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const app = Express();
@@ -15,6 +15,7 @@ app.get("/pay", (req, res) => {
 });
 
 app.get("/checkout", async (req, res) => {
+  // force the payment app to load very slowly
   await sleep(3000);
   res.send("Welcome to TestPay!");
 });
