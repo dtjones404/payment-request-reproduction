@@ -1,3 +1,5 @@
+interface Window extends ServiceWorkerGlobalScope {}
+
 self.addEventListener("install", function (event) {
   event.waitUntil(self.skipWaiting());
 });
@@ -25,15 +27,37 @@ self.addEventListener("paymentrequest", async (paymentRequestEvent) => {
   paymentRequestEvent.openWindow("/checkout.html");
 });
 
-self.addEventListener("message", async ({ data }) => {
-  const { response } = await sendEventToMerchantPage({
-    eventName: "message",
-    eventPayload: data,
-  });
-  console.log(`service worker got response: ${response}`);
-});
+self.addEventListener(
+  "message",
+  async ({ data: { eventName, eventPayload } }) => {
+    handleEventFromPaymentApp(eventName, eventPayload);
+  }
+);
 
-async function sendEventToMerchantPage({ eventName, eventPayload }) {
+async function handleEventFromPaymentApp(
+  eventName: string,
+  eventPayload: unknown
+) {
+  switch (eventName) {
+    case "shippingaddresschange":
+      const shippingAddressResponse = await sendEventToMerchantPage(
+        eventName,
+        eventPayload
+      );
+      console.log(
+        "service worker got response for shippingaddresschange event:",
+        shippingAddressResponse
+      );
+      break;
+    default:
+      break;
+  }
+}
+
+async function sendEventToMerchantPage(
+  eventName: string,
+  eventPayload: unknown
+) {
   if (!activePaymentRequestEvent) {
     return;
   }
@@ -46,5 +70,5 @@ async function sendEventToMerchantPage({ eventName, eventPayload }) {
     }
   );
 
-  return response?.modifiers?.[0]?.data;
+  return response?.modifiers?.[0]?.data.response;
 }
