@@ -1,3 +1,41 @@
+// @ts-expect-error asdf
+type PaymentRequestShippingAddress = {
+  addressLine?: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  country: string;
+};
+
+// @ts-expect-error asdf
+type PaymentRequestShippingOption = string;
+
+// @ts-expect-error asdf
+type PayPalOnShippingAddressChangeData = {
+  orderId?: string;
+  shippingAddress: {
+    city: string;
+    countryCode: string;
+    postalCode: string;
+    state: string;
+  };
+};
+
+// @ts-expect-error asdf
+type PayPalOnShippingOptionsChangeData = {
+  orderId: string;
+  selectedShippingOption: {
+    amount: {
+      currencyCode: string;
+      value: string;
+    };
+    id: string;
+    label: string;
+    selected: boolean;
+    type: string;
+  };
+};
+
 interface Window extends ServiceWorkerGlobalScope {}
 
 self.addEventListener("install", function (event) {
@@ -40,35 +78,83 @@ async function handleEventFromPaymentApp(
 ) {
   switch (eventName) {
     case "shippingaddresschange":
-      const shippingAddressResponse = await sendEventToMerchantPage(
-        eventName,
-        eventPayload
-      );
-      console.log(
-        "service worker got response for shippingaddresschange event:",
-        shippingAddressResponse
-      );
+      try {
+        const shippingAddressResponse =
+          await sendShippingAddressChangeToMerchantPage(
+            eventPayload as PayPalOnShippingAddressChangeData
+          );
+        console.log(
+          "service worker got response for shippingaddresschange event:",
+          shippingAddressResponse
+        );
+      } catch (err) {
+        console.log(
+          `service worker got shippingaddresschange rejection: ${err}`
+        );
+      }
+
+      break;
+
+    case "shippingoptionschange":
+      try {
+        const shippingOptionsResponse =
+          await sendShippingOptionsChangeToMerchantPage(
+            eventPayload as PayPalOnShippingOptionsChangeData
+          );
+        console.log(
+          "service worker got response for shippingoptionchange event:",
+          shippingOptionsResponse
+        );
+      } catch (err) {
+        console.log(
+          `service worker got shippingoptionchange rejection: ${err}`
+        );
+      }
+
       break;
     default:
       break;
   }
 }
 
-async function sendEventToMerchantPage(
-  eventName: string,
-  eventPayload: unknown
-) {
+async function sendShippingAddressChangeToMerchantPage({
+  shippingAddress: { city, countryCode, postalCode, state },
+}: PayPalOnShippingAddressChangeData) {
   if (!activePaymentRequestEvent) {
     return;
   }
 
-  const response = await activePaymentRequestEvent.changePaymentMethod(
-    activePaymentRequestEvent.methodData[0].supportedMethods,
-    {
-      eventName,
-      eventPayload,
-    }
-  );
+  const paymentRequestShippingAddress: PaymentRequestShippingAddress = {
+    city,
+    country: countryCode,
+    postalCode,
+    region: state,
+    // @ts-expect-error asdf
+    shippingOption: "hack",
+    selectedShippingOption: "hack",
+  };
 
-  return response?.modifiers?.[0]?.data.response;
+  return await activePaymentRequestEvent.changeShippingAddress(
+    paymentRequestShippingAddress
+  );
+}
+
+async function sendShippingOptionsChangeToMerchantPage({
+  selectedShippingOption: { amount, id, label, selected, type },
+}: PayPalOnShippingOptionsChangeData) {
+  if (!activePaymentRequestEvent) {
+    return;
+  }
+
+  const paymentRequestShippingOption: string = JSON.stringify({
+    id,
+    amount,
+    label,
+    selected,
+    type,
+  });
+
+  return await activePaymentRequestEvent.changeShippingOption("hack", {
+    asdf: "1234",
+  });
 }

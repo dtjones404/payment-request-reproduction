@@ -6,6 +6,14 @@
     "src": "/service-worker.js",
     "use_cache": false
   },
+  "payment": {
+    "supported_delegations": [
+      "shippingAddress",
+      "payerName",
+      "payerEmail",
+      "payerPhone"
+    ]
+  },
   "icons": [
     {
       "src": "/images/icon-192x192.png",

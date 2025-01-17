@@ -6,7 +6,12 @@
     <title>Document</title>
   </head>
   <body>
-    <button id="change-shipping-address-button">Send Hello World</button>
+    <button id="change-shipping-address-button">
+      Send Shipping Address Change
+    </button>
+    <button id="change-shipping-options-button">
+      Send Shipping Options Change
+    </button>
     <script>
       const changeShippingAddressButton = document.getElementById(
         "change-shipping-address-button"
@@ -17,11 +22,32 @@
           eventName: "shippingaddresschange",
           eventPayload: {
             orderId: "abcd1234",
-            partialShippingAddress: {
+            shippingAddress: {
               city: "New York",
               countryCode: "US",
               postalCode: "10001",
               state: "NY",
+            },
+          },
+        });
+      });
+
+      const changeShippingOptionButton = document.getElementById(
+        "change-shipping-options-button"
+      );
+
+      changeShippingOptionButton.addEventListener("click", () => {
+        navigator.serviceWorker.controller.postMessage({
+          eventName: "shippingoptionschange",
+          eventPayload: {
+            selectedShippingOption: {
+              amount: {
+                currencyCode: "USD",
+                value: "0.00",
+              },
+              id: "free",
+              label: "Free Shipping",
+              selected: true,
             },
           },
         });
